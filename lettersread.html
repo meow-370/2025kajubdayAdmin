@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sky | Her Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;500&family=Dancing+Script:wght@600&family=Homemade+Apple&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <style>
+        /* DEEP SPACE BACKGROUND */
+        body { 
+            margin: 0; height: 100vh; overflow: hidden;
+            background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%);
+            font-family: 'Inter', sans-serif; color: white;
+        }
+
+        /* --- UI CONTROLS --- */
+        .controls-top {
+            position: absolute; top: 20px; right: 20px; z-index: 100;
+            display: flex; gap: 15px;
+        }
+
+        .hud-btn {
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 15px; border-radius: 20px;
+            cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;
+            backdrop-filter: blur(5px); transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .hud-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; border-color: white; }
+        .hud-btn.active { background: rgba(212, 175, 55, 0.3); border-color: #D4AF37; color: #D4AF37; }
+
+        /* --- THE SKY --- */
+        #star-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            perspective: 800px; /* For the 3D shooting effect */
+        }
+
+        .star {
+            position: absolute; cursor: pointer;
+            width: 15px; height: 15px;
+            background: white; border-radius: 50%;
+            box-shadow: 0 0 10px white, 0 0 20px white;
+            transition: transform 0.3s;
+            animation: shootIn 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; /* The Entrance */
+            opacity: 0; /* Starts hidden */
+        }
+        
+        .star:hover { transform: scale(1.5); z-index: 50; }
+
+        /* MOOD COLORS */
+        .mood-heartfelt { background: #ffd700; box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700; } /* Gold */
+        .mood-nostalgic { background: #87ceeb; box-shadow: 0 0 10px #87ceeb, 0 0 20px #87ceeb; } /* Blue */
+        .mood-funny { background: #ff69b4; box-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4; } /* Pink */
+        .mood-proud { background: #ff4500; box-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500; } /* Orange */
+
+        /* SENDER NAME LABEL */
+        .star-name {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            font-size: 0.7rem; color: rgba(255,255,255,0.8);
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.5s;
+            text-shadow: 0 2px 4px black; font-weight: 500; letter-spacing: 1px;
+        }
+
+        /* Toggle State */
+        .show-names .star-name { opacity: 1; }
+
+        /* SHOOTING STAR ENTRANCE ANIMATION */
+        @keyframes shootIn {
+            0% { transform: translateZ(-800px) scale(0); opacity: 0; }
+            100% { transform: translateZ(0) scale(1); opacity: 1; }
+        }
+
+        /* TWINKLE ANIMATION (Applied after entrance) */
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* --- THE LETTER READER (MODAL) --- */
+        #letter-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 200;
+            backdrop-filter: blur(8px);
+            align-items: center; justify-content: center;
+        }
+
+        /* REUSING THE JAGGED PAPER CSS FROM SENDING PAGE */
+        .modal-content {
+            width: 80%; max-width: 600px; min-height: 50vh; padding: 50px;
+            color: #222; position: relative;
+            
+            /* JAGGED EDGE MAGIC */
+            clip-path: polygon(
+                0% 1%, 2% 0%, 5% 2%, 8% 0%, 11% 1%, 15% 0%, 18% 2%, 22% 0%, 25% 1%, 29% 0%, 33% 2%, 37% 0%, 41% 1%, 45% 0%, 50% 2%, 55% 0%, 59% 1%, 63% 0%, 67% 2%, 72% 0%, 76% 1%, 80% 0%, 85% 2%, 90% 0%, 95% 1%, 98% 0%, 100% 1%,
+                99% 5%, 100% 10%, 98% 15%, 100% 20%, 99% 25%, 100% 30%, 98% 35%, 100% 40%, 99% 45%, 100% 50%, 98% 55%, 100% 60%, 99% 65%, 100% 70%, 98% 75%, 100% 80%, 99% 85%, 100% 90%, 98% 95%, 100% 99%,
+                98% 100%, 95% 98%, 90% 100%, 85% 99%, 80% 100%, 75% 98%, 70% 100%, 65% 99%, 60% 100%, 55% 98%, 50% 100%, 45% 99%, 40% 100%, 35% 98%, 30% 100%, 25% 99%, 20% 100%, 15% 98%, 10% 100%, 5% 99%, 2% 100%, 0% 99%,
+                1% 95%, 0% 90%, 2% 85%, 0% 80%, 1% 75%, 0% 70%, 2% 65%, 0% 60%, 1% 55%, 0% 50%, 2% 45%, 0% 40%, 1% 35%, 0% 30%, 2% 25%, 0% 20%, 1% 15%, 0% 10%, 2% 5%
+            );
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+            
+            background-image: url('paper.jpg'); 
+            background-repeat: no-repeat;
+            animation: unfold 0.6s ease-out;
+        }
+
+        /* PAPER STYLES */
+        .style-classic { background-size: cover; background-position: center; font-family: 'Dancing Script', cursive; font-size: 1.5rem; line-height: 1.6; }
+        .style-midnight { background-size: 200%; background-position: top left; background-color: #1a1a1a; background-blend-mode: hard-light; color: #D4AF37; font-family: 'Inter', sans-serif; font-weight: 300; }
+        .style-parchment { background-size: 150%; background-position: bottom right; background-color: #d4c5a3; background-blend-mode: multiply; color: #3b2a1a; font-family: 'Homemade Apple', cursive; }
+        .style-rose { background-size: 120%; background-position: center; background-color: #ffe4e1; background-blend-mode: multiply; color: #6d0f0f; font-family: 'Playfair Display', serif; font-weight: 600; font-style: italic; }
+
+        .modal-close {
+            position: absolute; top: 20px; right: 20px;
+            color: inherit; opacity: 0.5; cursor: pointer; font-family: 'Inter'; font-size: 0.8rem;
+        }
+        .modal-close:hover { opacity: 1; }
+
+        .signature { margin-top: 30px; text-align: right; font-size: 0.9em; opacity: 0.8; }
+        .one-word { font-size: 0.7em; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; opacity: 0.6; }
+
+        @keyframes unfold { from { transform: scale(0) rotate(-10deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+        /* LOADING */
+        #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.5); letter-spacing: 3px; font-size: 0.8rem; animation: pulse 1s infinite; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="lettersong.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="controls-top">
+        <button class="hud-btn" onclick="toggleMusic()" id="musicBtn">
+            <span>Play Music</span> 🎵
+        </button>
+        <button class="hud-btn" onclick="toggleNames()" id="constellationBtn">
+            <span>Constellation Mode</span> ✨
+        </button>
+    </div>
+
+    <div id="loading">SCANNING THE SKY...</div>
+    <div id="star-container"></div>
+
+    <div id="letter-modal" onclick="closeLetter()">
+        <div class="modal-content style-classic" id="modalPaper" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeLetter()">CLOSE ✕</div>
+            <div id="modalBody">
+                </div>
+            <div class="signature">
+                <div id="modalSender">- Shravan</div>
+                <div id="modalWord" class="one-word">"Radiant"</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPHhWTmAqPkZ8mRSGGxcBp3lgWUBzstMk",
+            authDomain: "website-665c0.firebaseapp.com",
+            projectId: "website-665c0",
+            storageBucket: "website-665c0.firebasestorage.app",
+            messagingSenderId: "831316473256",
+            appId: "1:831316473256:web:1671afdcfc4597383d199d",
+            measurementId: "G-DFC7C5VNMZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const lettersCol = collection(db, "letters");
+
+        let isMusicPlaying = false;
+
+        // LOAD LETTERS
+        async function loadSky() {
+            const q = query(lettersCol, orderBy("timestamp", "desc"));
+            const snapshot = await getDocs(q);
+            
+            document.getElementById('loading').style.display = 'none';
+            const container = document.getElementById('star-container');
+
+            if(snapshot.empty) {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerText = "NO STARS YET";
+                return;
+            }
+
+            let index = 0;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                createStar(data, container, index);
+                index++;
+            });
+        }
+
+        function createStar(data, container, index) {
+            const star = document.createElement('div');
+            star.className = `star mood-${data.mood || 'heartfelt'}`;
+            
+            // Random Position (with padding so they aren't on edge)
+            const x = Math.random() * 80 + 10; // 10% to 90%
+            const y = Math.random() * 80 + 10;
+            
+            star.style.left = `${x}%`;
+            star.style.top = `${y}%`;
+            
+            // Staggered Animation Delay for "Shooting Star" effect
+            star.style.animationDelay = `${index * 0.1}s`;
+
+            // Name Label
+            const label = document.createElement('div');
+            label.className = 'star-name';
+            label.innerText = data.sender;
+            star.appendChild(label);
+
+            // Click Event
+            star.onclick = () => openLetter(data);
+
+            container.appendChild(star);
+        }
+
+        // GLOBAL FUNCTIONS
+        window.openLetter = (data) => {
+            const modal = document.getElementById('letter-modal');
+            const paper = document.getElementById('modalPaper');
+            
+            // Set Text
+            document.getElementById('modalBody').innerText = data.message;
+            document.getElementById('modalSender').innerText = `- ${data.sender}`;
+            document.getElementById('modalWord').innerText = `"${data.oneWord || 'Forever'}"`;
+
+            // Set Style (Remove old, add new)
+            paper.className = `modal-content style-${data.style || 'classic'}`;
+
+            modal.style.display = 'flex';
+        };
+
+        window.closeLetter = () => {
+            document.getElementById('letter-modal').style.display = 'none';
+        };
+
+        window.toggleNames = () => {
+            document.getElementById('star-container').classList.toggle('show-names');
+            document.getElementById('constellationBtn').classList.toggle('active');
+        };
+
+        window.toggleMusic = () => {
+            const audio = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicBtn');
+            
+            if(isMusicPlaying) {
+                audio.pause();
+                btn.classList.remove('active');
+                btn.innerHTML = '<span>Play Music</span> 🎵';
+            } else {
+                audio.play().catch(e => alert("Click page first!"));
+                btn.classList.add('active');
+                btn.innerHTML = '<span>Pause</span> ⏸️';
+            }
+            isMusicPlaying = !isMusicPlaying;
+        };
+
+        // Initialize
+        loadSky();
+
+    </script>
+</body>
+</html>
