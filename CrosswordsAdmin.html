@@ -72,7 +72,9 @@
         
         .answer-correct { color: #4caf50; }
         .answer-wrong { color: #f44336; text-decoration: line-through; opacity: 0.7; }
-        .real-answer { color: #aaa; font-size: 0.8rem; margin-left: 10px; }
+        
+        /* Updated this to be brighter so it is clearly visible */
+        .real-answer { color: #D4AF37; font-size: 0.8rem; margin-left: 10px; opacity: 0.9; }
 
         .header-row { font-weight: bold; color: #D4AF37; margin-bottom: 10px; }
 
@@ -86,6 +88,10 @@
     </style>
 </head>
 <body>
+
+    <audio id="admin-bgm" loop>
+        <source src="crosswordsong.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="login-overlay">
         <div class="login-box">
@@ -127,6 +133,12 @@
             // CHANGE THIS TO WHATEVER PASSWORD YOU WANT
             if(pass === "18" || pass === "shravan") {
                 document.getElementById('login-overlay').style.display = 'none';
+                
+                // Play Music
+                const audio = document.getElementById('admin-bgm');
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log("Audio couldn't play automatically:", e));
+                
                 loadData();
             } else {
                 alert("Access Denied. Nice try.");
@@ -137,7 +149,6 @@
             const container = document.getElementById('results-container');
             const loadTxt = document.getElementById('loading-txt');
             
-            // Get data ordered by newest first
             const q = query(resultsCol, orderBy("timestamp", "desc"));
             const snapshot = await getDocs(q);
             
@@ -173,12 +184,8 @@
                 </div>
             `;
 
-            // We need to loop through the 'answers' object
-            // The keys look like "Q1_VRINDAVAN"
-            // We want to sort them so Q1 comes before Q10
             if(data.answers) {
                 const sortedKeys = Object.keys(data.answers).sort((a,b) => {
-                    // Extract number Q1 -> 1
                     const numA = parseInt(a.split('_')[0].replace('Q',''));
                     const numB = parseInt(b.split('_')[0].replace('Q',''));
                     return numA - numB;
@@ -186,10 +193,12 @@
 
                 sortedKeys.forEach(key => {
                     const userVal = data.answers[key];
-                    // Parse key: Q1_VRINDAVAN -> [Q1, VRINDAVAN]
+                    
+                    // FIXED LOGIC: Handles answers like "Q10_LONG_ISLAND" correctly
                     const parts = key.split('_');
                     const qNum = parts[0];
-                    const correctVal = parts[1]; // The answer is stored in the key name!
+                    // Rejoin the rest of the parts in case the answer has underscores
+                    const correctVal = parts.slice(1).join('_'); 
 
                     const isCorrect = userVal === correctVal;
                     
@@ -200,7 +209,7 @@
                                 ${userVal}
                             </span>
                             <span class="real-answer">
-                                ${isCorrect ? '' : correctVal} 
+                                ${correctVal} 
                             </span>
                         </div>
                     `;
