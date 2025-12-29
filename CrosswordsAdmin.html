@@ -14,7 +14,26 @@
         }
 
         h1 { font-family: 'Cinzel', serif; color: #D4AF37; margin-bottom: 5px; }
-        .subtitle { font-size: 0.9rem; opacity: 0.6; margin-bottom: 30px; }
+        .subtitle { font-size: 0.9rem; opacity: 0.6; margin-bottom: 10px; }
+
+        /* --- MUSIC BUTTON --- */
+        .music-btn {
+            background: transparent;
+            border: 1px solid #D4AF37;
+            color: #D4AF37;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .music-btn:hover {
+            background: #D4AF37;
+            color: black;
+        }
 
         /* --- LOGIN SCREEN --- */
         #login-overlay {
@@ -72,8 +91,6 @@
         
         .answer-correct { color: #4caf50; }
         .answer-wrong { color: #f44336; text-decoration: line-through; opacity: 0.7; }
-        
-        /* Updated this to be brighter so it is clearly visible */
         .real-answer { color: #D4AF37; font-size: 0.8rem; margin-left: 10px; opacity: 0.9; }
 
         .header-row { font-weight: bold; color: #D4AF37; margin-bottom: 10px; }
@@ -106,6 +123,10 @@
     <h1>The Archives</h1>
     <div class="subtitle">Tap a name to see their mistakes.</div>
 
+    <button id="music-btn" class="music-btn" onclick="toggleMusic()">
+        ▶ Play Music
+    </button>
+
     <div id="loading-txt" class="loading">Fetching Results...</div>
     <div id="results-container"></div>
 
@@ -130,18 +151,27 @@
         // LOGIN LOGIC
         window.checkPassword = () => {
             const pass = document.getElementById('password').value;
-            // CHANGE THIS TO WHATEVER PASSWORD YOU WANT
             if(pass === "18" || pass === "shravan") {
                 document.getElementById('login-overlay').style.display = 'none';
-                
-                // Play Music
-                const audio = document.getElementById('admin-bgm');
-                audio.volume = 0.5;
-                audio.play().catch(e => console.log("Audio couldn't play automatically:", e));
-                
+                // Note: We are NOT playing music here anymore.
                 loadData();
             } else {
                 alert("Access Denied. Nice try.");
+            }
+        };
+
+        // MUSIC TOGGLE LOGIC
+        window.toggleMusic = () => {
+            const audio = document.getElementById('admin-bgm');
+            const btn = document.getElementById('music-btn');
+
+            if (audio.paused) {
+                audio.volume = 0.5;
+                audio.play();
+                btn.innerHTML = "❚❚ Pause Music";
+            } else {
+                audio.pause();
+                btn.innerHTML = "▶ Play Music";
             }
         };
 
@@ -170,12 +200,10 @@
             const div = document.createElement('div');
             div.className = 'player-card';
 
-            // Score Color Logic
             let scoreClass = 'score-low';
             if(data.score >= 9) scoreClass = 'score-high';
             else if(data.score >= 6) scoreClass = 'score-mid';
 
-            // Generate Details HTML
             let detailsHTML = `
                 <div class="detail-row header-row">
                     <span>#</span>
@@ -194,10 +222,8 @@
                 sortedKeys.forEach(key => {
                     const userVal = data.answers[key];
                     
-                    // FIXED LOGIC: Handles answers like "Q10_LONG_ISLAND" correctly
                     const parts = key.split('_');
                     const qNum = parts[0];
-                    // Rejoin the rest of the parts in case the answer has underscores
                     const correctVal = parts.slice(1).join('_'); 
 
                     const isCorrect = userVal === correctVal;
